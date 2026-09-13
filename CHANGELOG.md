@@ -10,10 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `ShouldApplyReplication` event which which allows to defer message application.
+- `ClientVisilibity::get` is now public and can be used to access the `FiltersMask` bitmask of an entity.
 
 ### Changes
 
-- ClientVisilibity::get is now public and be used to access the `FiltersMask` bitmask of an entity.
 - Confirm mutate ticks after the message is applied.
 
 ### Fixed
