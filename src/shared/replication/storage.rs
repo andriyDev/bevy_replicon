@@ -40,7 +40,7 @@ app.add_observer(store_position_precision)
     .replicate_with(RuleFns::new(serialize_position, deserialize_position));
 
 fn store_position_precision(
-    add: On<Add, Precision>,
+    add: On<Add<Precision>>,
     precision: Query<&Precision>,
     mut storage: ResMut<ReplicationStorage>,
 ) {

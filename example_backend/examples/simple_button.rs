@@ -68,7 +68,7 @@ fn setup(mut commands: Commands, cli: Res<Cli>) -> Result<()> {
 }
 
 /// Since we can't include hierarchy into required components, initialize it on insertion.
-fn init_toggle_button(add: On<Add, ToggleButton>, mut commands: Commands) {
+fn init_toggle_button(add: On<Add<ToggleButton>>, mut commands: Commands) {
     commands.entity(add.entity).with_child((
         Text::default(),
         TextShadow::default(),
@@ -85,7 +85,7 @@ fn init_toggle_button(add: On<Add, ToggleButton>, mut commands: Commands) {
 /// Used on both the server and the clients.
 /// Triggering this on the server will emit [`FromClient`] with [`ClientId::Server`].
 fn trigger_remote_toggle(
-    click: On<Pointer<Click>>,
+    click: On<PointerClick>,
     mut commands: Commands,
     buttons: Query<(), With<ToggleButton>>,
 ) {
