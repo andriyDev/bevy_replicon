@@ -340,7 +340,7 @@ fn apply_units_move(
 
     positions.clear();
     positions.reserve(move_units.units.len());
-    for (&unit_team, transform, _) in units.iter_many(&move_units.units) {
+    for (&unit_team, transform, _) in units.iter_many(&move_units.units).matched() {
         if unit_team != team {
             error!(
                 "`{}` has team `{team:?}`, but tried to move unit with team `{unit_team:?}`",
@@ -387,7 +387,7 @@ fn apply_units_move(
         .collect();
     let (_, unit_to_slot) = kuhn_munkres_min(&weights);
 
-    let mut iter = units.iter_many_mut(&move_units.units);
+    let mut iter = units.iter_many_mut(&move_units.units).matched();
     for &slot_index in &unit_to_slot {
         let (.., mut command) = iter.fetch_next().unwrap();
         *command = Command::Move(slots[slot_index]);

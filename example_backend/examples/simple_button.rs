@@ -130,7 +130,7 @@ fn update_toggle_text(
     mut texts: Query<&mut Text>,
 ) {
     for (&toggle, children) in buttons {
-        if let Some(mut text) = texts.iter_many_mut(children).fetch_next() {
+        if let Some(mut text) = texts.iter_many_mut(children).matched().fetch_next() {
             text.clear();
             if *toggle {
                 text.push_str("On");
