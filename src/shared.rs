@@ -11,7 +11,6 @@ use bevy::{
         change_detection::MutUntyped,
         component::ComponentId,
         resource::ResourceEntities,
-        system::QueryParamBuilder,
         world::{FilteredEntityMut, FilteredEntityRef},
     },
     prelude::*,
@@ -164,39 +163,6 @@ pub enum AuthMethod {
     ///
     /// The user is responsible for manually inserting [`AuthorizedClient`] on the server.
     Custom,
-}
-
-/// Creates a [`SystemParamBuilder`] that can be used to build a system that accesses all the
-/// resources provided.
-///
-/// You need to use [`ResourceEntities`] to find the entity to query for a given resource.
-pub(crate) fn build_resource_ref_query(
-    resource_ids: impl Iterator<Item = ComponentId>,
-) -> impl for<'w, 's> SystemParamBuilder<Query<'w, 's, FilteredEntityRef<'static, 'static>>> {
-    QueryParamBuilder::new(move |builder| {
-        for resource in resource_ids {
-            builder.optional(|builder| {
-                builder.ref_id(resource);
-            });
-        }
-    })
-}
-
-/// Creates a [`SystemParamBuilder`] that can be used to build a system that accesses all the
-/// resources provided.
-///
-/// You need to use [`ResourceEntities`] to find the entity to query for a given resource.
-pub(crate) fn build_resource_mut_query(
-    resource_ids: impl Iterator<Item = ComponentId> + Clone,
-) -> impl for<'w, 's> SystemParamBuilder<Query<'w, 's, FilteredEntityMut<'static, 'static>>> + Clone
-{
-    QueryParamBuilder::new(move |builder| {
-        for resource in resource_ids.clone() {
-            builder.optional(|builder| {
-                builder.mut_id(resource);
-            });
-        }
-    })
 }
 
 /// Fetches the resource with `resource_id` from `query`.
