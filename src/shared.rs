@@ -6,7 +6,17 @@ pub mod replication;
 pub mod replicon_tick;
 pub mod server_entity_map;
 
-use bevy::prelude::*;
+use bevy::{
+    ecs::{
+        change_detection::MutUntyped,
+        component::ComponentId,
+        resource::ResourceEntities,
+        system::QueryParamBuilder,
+        world::{FilteredEntityMut, FilteredEntityRef},
+    },
+    prelude::*,
+    ptr::Ptr,
+};
 
 use crate::prelude::*;
 use backend::connected_client::NetworkIdMap;
@@ -154,4 +164,81 @@ pub enum AuthMethod {
     ///
     /// The user is responsible for manually inserting [`AuthorizedClient`] on the server.
     Custom,
+}
+
+/// Creates a [`SystemParamBuilder`] that can be used to build a system that accesses all the
+/// resources provided.
+///
+/// You need to use [`ResourceEntities`] to find the entity to query for a given resource.
+pub(crate) fn build_resource_ref_query(
+    resource_ids: impl Iterator<Item = ComponentId>,
+) -> impl for<'w, 's> SystemParamBuilder<Query<'w, 's, FilteredEntityRef<'static, 'static>>> {
+    QueryParamBuilder::new(move |builder| {
+        for resource in resource_ids {
+            builder.optional(|builder| {
+                builder.ref_id(resource);
+            });
+        }
+    })
+}
+
+/// Creates a [`SystemParamBuilder`] that can be used to build a system that accesses all the
+/// resources provided.
+///
+/// You need to use [`ResourceEntities`] to find the entity to query for a given resource.
+pub(crate) fn build_resource_mut_query(
+    resource_ids: impl Iterator<Item = ComponentId> + Clone,
+) -> impl for<'w, 's> SystemParamBuilder<Query<'w, 's, FilteredEntityMut<'static, 'static>>> + Clone
+{
+    QueryParamBuilder::new(move |builder| {
+        for resource in resource_ids.clone() {
+            builder.optional(|builder| {
+                builder.mut_id(resource);
+            });
+        }
+    })
+}
+
+/// Fetches the resource with `resource_id` from `query`.
+///
+/// Returns [`None`] if the resource doesn't exist.
+pub(crate) fn get_resource_by_id<'q>(
+    resource_id: ComponentId,
+    query: &'q Query<'_, '_, FilteredEntityRef<'_, '_>>,
+    resource_entities: &ResourceEntities,
+) -> Option<Ptr<'q>> {
+    resource_entities
+        .get(resource_id)
+        .and_then(|entity| query.get(entity).ok())
+        .and_then(|entity| entity.get_by_id(resource_id))
+}
+
+/// Fetches the resource entity for `resource_id` from `query`.
+///
+/// Returns [`None`] if the resource doesn't exist.
+// Because of lifetime issues, we need to store the `FilteredEntityMut` returned by the queries.
+// TODO: Replace these two functions with one that uses `FilteredEntityMut::into_mut_by_id` when
+// it's upstream.
+pub(crate) fn get_resource_entity_mut<'q, 's>(
+    resource_id: ComponentId,
+    query: &'q mut Query<'_, 's, FilteredEntityMut>,
+    resource_entities: &ResourceEntities,
+) -> Option<FilteredEntityMut<'q, 's>> {
+    resource_entities
+        .get(resource_id)
+        .and_then(|entity| query.get_mut(entity).ok())
+}
+
+/// Fetches the resource with `resource_id` from `entity_mut`.
+///
+/// Returns [`None`] if the entity doesn't hold the resource, or the query didn't have mutable
+/// access to the resource.
+// Because of lifetime issues, we need to store the `FilteredEntityMut` returned by the queries.
+// TODO: Replace these two functions with one that uses `FilteredEntityMut::into_mut_by_id` when
+// it's upstream.
+pub(crate) fn get_resource_mut_by_id<'e>(
+    resource_id: ComponentId,
+    entity_mut: &'e mut FilteredEntityMut<'_, '_>,
+) -> Option<MutUntyped<'e>> {
+    entity_mut.get_mut_by_id(resource_id)
 }

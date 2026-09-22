@@ -81,33 +81,33 @@ impl RemoteMessageRegistry {
         self.server_events.iter_mut()
     }
 
-    pub(crate) fn iter_all_server(&self) -> impl Iterator<Item = &ServerMessage> {
+    pub(crate) fn iter_all_server(&self) -> impl Iterator<Item = &ServerMessage> + Clone {
         self.server_messages
             .iter()
             .chain(self.server_events.iter().map(|e| e.message()))
     }
 
-    pub(crate) fn iter_all_client(&self) -> impl Iterator<Item = &ClientMessage> {
+    pub(crate) fn iter_all_client(&self) -> impl Iterator<Item = &ClientMessage> + Clone {
         self.client_messages
             .iter()
             .chain(self.client_events.iter().map(|e| e.message()))
     }
 
-    pub(crate) fn iter_all_shared(&self) -> impl Iterator<Item = &SharedMessage> {
+    pub(crate) fn iter_all_shared(&self) -> impl Iterator<Item = &SharedMessage> + Clone {
         self.shared_messages
             .iter()
             .chain(self.shared_events.iter().map(|e| e.message()))
     }
 
-    pub(crate) fn iter_server_events(&self) -> impl Iterator<Item = &ServerEvent> {
+    pub(crate) fn iter_server_events(&self) -> impl Iterator<Item = &ServerEvent> + Clone {
         self.server_events.iter()
     }
 
-    pub(crate) fn iter_client_events(&self) -> impl Iterator<Item = &ClientEvent> {
+    pub(crate) fn iter_client_events(&self) -> impl Iterator<Item = &ClientEvent> + Clone {
         self.client_events.iter()
     }
 
-    pub(crate) fn iter_shared_events(&self) -> impl Iterator<Item = &SharedEvent> {
+    pub(crate) fn iter_shared_events(&self) -> impl Iterator<Item = &SharedEvent> + Clone {
         self.shared_events.iter()
     }
 
