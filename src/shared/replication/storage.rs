@@ -3,7 +3,7 @@ use core::any::Any;
 use bevy::{
     ecs::entity::EntityHashMap,
     prelude::*,
-    utils::{TypeIdMap, TypeIdMapExt},
+    utils::{TypeIdHashMap, TypeIdHashMapExt},
 };
 
 /**
@@ -340,7 +340,7 @@ impl ReplicationStorage {
 /// Stores values by their concrete type. Can contain only one value of each type.
 #[derive(Default)]
 pub struct TypeMap {
-    values: TypeIdMap<Box<dyn Any + Send + Sync>>,
+    values: TypeIdHashMap<Box<dyn Any + Send + Sync>>,
 }
 
 impl TypeMap {
