@@ -41,12 +41,9 @@ impl Plugin for ServerMessagePlugin {
         if registry.has_any_client() {
             let receive_fn = (
                 QueryParamBuilder::new(|builder| {
-                    for resource in registry
-                        .iter_all_client()
-                        .map(|message| message.from_messages_id())
-                    {
+                    for message in registry.iter_all_client() {
                         builder.optional(|builder| {
-                            builder.mut_id(resource);
+                            builder.mut_id(message.from_messages_id());
                         });
                     }
                 }),
@@ -70,12 +67,9 @@ impl Plugin for ServerMessagePlugin {
         if registry.has_client_events() {
             let trigger_fn = (
                 QueryParamBuilder::new(|builder| {
-                    for resource in registry
-                        .iter_client_events()
-                        .map(|event| event.message().from_messages_id())
-                    {
+                    for event in registry.iter_client_events() {
                         builder.optional(|builder| {
-                            builder.mut_id(resource);
+                            builder.mut_id(event.message().from_messages_id());
                         });
                     }
                 }),
@@ -98,12 +92,9 @@ impl Plugin for ServerMessagePlugin {
         if registry.has_any_shared() {
             let receive_shared_fn = (
                 QueryParamBuilder::new(|builder| {
-                    for resource in registry
-                        .iter_all_shared()
-                        .map(|message| message.shared_messages_id())
-                    {
+                    for message in registry.iter_all_shared() {
                         builder.optional(|builder| {
-                            builder.mut_id(resource);
+                            builder.mut_id(message.shared_messages_id());
                         });
                     }
                 }),
@@ -127,12 +118,9 @@ impl Plugin for ServerMessagePlugin {
         if registry.has_shared_events() {
             let trigger_shared_fn = (
                 QueryParamBuilder::new(|builder| {
-                    for resource in registry
-                        .iter_shared_events()
-                        .map(|event| event.message().shared_messages_id())
-                    {
+                    for event in registry.iter_shared_events() {
                         builder.optional(|builder| {
-                            builder.mut_id(resource);
+                            builder.mut_id(event.message().shared_messages_id());
                         });
                     }
                 }),
@@ -154,12 +142,9 @@ impl Plugin for ServerMessagePlugin {
         if registry.has_any_server() {
             let send_or_buffer_fn = (
                 QueryParamBuilder::new(|builder| {
-                    for resource in registry
-                        .iter_all_server()
-                        .map(|message| message.to_messages_id())
-                    {
+                    for message in registry.iter_all_server() {
                         builder.optional(|builder| {
-                            builder.ref_id(resource);
+                            builder.ref_id(message.to_messages_id());
                         });
                     }
                 }),
@@ -176,22 +161,16 @@ impl Plugin for ServerMessagePlugin {
 
             let send_locally_fn = (
                 QueryParamBuilder::new(|builder| {
-                    for resource in registry
-                        .iter_all_server()
-                        .map(|message| message.to_messages_id())
-                    {
+                    for message in registry.iter_all_server() {
                         builder.optional(|builder| {
-                            builder.mut_id(resource);
+                            builder.mut_id(message.to_messages_id());
                         });
                     }
                 }),
                 QueryParamBuilder::new(|builder| {
-                    for resource in registry
-                        .iter_all_server()
-                        .map(|message| message.messages_id())
-                    {
+                    for message in registry.iter_all_server() {
                         builder.optional(|builder| {
-                            builder.mut_id(resource);
+                            builder.mut_id(message.messages_id());
                         });
                     }
                 }),
