@@ -4,7 +4,9 @@
 
 use std::net::{IpAddr, Ipv4Addr};
 
-use bevy::{ecs::entity::MapEntities, prelude::*};
+use bevy::{
+    ecs::entity::MapEntities, picking::hover::Hovered, prelude::*, ui::Pressed, ui_widgets::Button,
+};
 use bevy_replicon::prelude::*;
 use bevy_replicon_example_backend::{ExampleClient, ExampleServer, RepliconExampleBackendPlugins};
 use clap::Parser;
@@ -26,6 +28,8 @@ fn main() {
         .add_observer(trigger_remote_toggle)
         .add_observer(apply_remote_toggle)
         .add_systems(Startup, setup)
+        .add_observer(on_add_pressed_or_hovered)
+        .add_observer(on_remove_pressed_or_hovered)
         .add_systems(Update, (update_button_background, update_toggle_text))
         .run();
 }
@@ -109,14 +113,39 @@ fn apply_remote_toggle(
     }
 }
 
-fn update_button_background(
-    mut buttons: Query<(&Interaction, &mut BackgroundColor), (Changed<Interaction>, With<Button>)>,
+/// Observer to notify the button to update its color when Pressed or Hovered is added.
+///
+/// We defer the button color update until later, so that we don't see an "incomplete state" (e.g.,
+/// hovered added while pressed needs to be removed).
+fn on_add_pressed_or_hovered(event: On<Add<(Pressed, Hovered)>>, mut button: Query<&mut Button>) {
+    let Ok(mut button) = button.get_mut(event.entity) else {
+        return;
+    };
+    button.set_changed();
+}
+
+/// Observer to notify the button to update its color when Pressed or Hovered is removed.
+///
+/// We defer the button color update until later, so that we don't see an "incomplete state" (e.g.,
+/// hovered added while pressed needs to be removed).
+fn on_remove_pressed_or_hovered(
+    event: On<Remove<(Pressed, Hovered)>>,
+    mut button: Query<&mut Button>,
 ) {
-    for (interaction, mut background_color) in &mut buttons {
-        *background_color = match interaction {
-            Interaction::Pressed => Color::srgb(0.35, 0.75, 0.35).into(),
-            Interaction::Hovered => Color::srgb(0.25, 0.25, 0.25).into(),
-            Interaction::None => Color::srgb(0.15, 0.15, 0.15).into(),
+    let Ok(mut button) = button.get_mut(event.entity) else {
+        return;
+    };
+    button.set_changed();
+}
+
+fn update_button_background(
+    mut buttons: Query<(Has<Pressed>, Has<Hovered>, &mut BackgroundColor), Changed<Button>>,
+) {
+    for (pressed, hovered, mut background_color) in &mut buttons {
+        *background_color = match (pressed, hovered) {
+            (true, _) => Color::srgb(0.35, 0.75, 0.35).into(),
+            (false, true) => Color::srgb(0.25, 0.25, 0.25).into(),
+            (false, false) => Color::srgb(0.15, 0.15, 0.15).into(),
         }
     }
 }

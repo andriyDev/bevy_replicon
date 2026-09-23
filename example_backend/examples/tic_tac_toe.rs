@@ -8,7 +8,10 @@ use std::{
 
 use bevy::{
     ecs::{relationship::RelatedSpawner, spawn::SpawnWith},
+    picking::hover::Hovered,
     prelude::*,
+    ui::Pressed,
+    ui_widgets::Button,
 };
 use bevy_replicon::prelude::*;
 use bevy_replicon_example_backend::{ExampleClient, ExampleServer, RepliconExampleBackendPlugins};
@@ -64,6 +67,8 @@ fn main() {
         .add_systems(OnEnter(ClientState::Connecting), show_connecting_text)
         .add_systems(OnExit(ClientState::Connected), disconnect_by_server)
         .add_systems(OnEnter(ServerState::Running), show_waiting_client_text)
+        .add_observer(on_add_pressed_or_hovered)
+        .add_observer(on_remove_pressed_or_hovered)
         .add_systems(
             Update,
             (
@@ -323,7 +328,7 @@ fn init_symbol(
 
     commands
         .entity(add.entity)
-        .remove::<Interaction>()
+        .remove::<(Pressed, Hovered)>()
         .with_child((
             Text::new(symbol.glyph()),
             TextFont {
@@ -339,7 +344,7 @@ fn init_symbol(
 fn deinit_symbol(remove: On<Remove<Symbol>>, mut commands: Commands) {
     commands
         .entity(remove.entity)
-        .insert(Interaction::None)
+        .remove::<(Pressed, Hovered)>()
         .despawn_children();
 }
 
@@ -485,17 +490,42 @@ fn advance_turn(
     }
 }
 
+/// Observer to notify the button to update its color when Pressed or Hovered is added.
+///
+/// We defer the button color update until later, so that we don't see an "incomplete state" (e.g.,
+/// hovered added while pressed needs to be removed).
+fn on_add_pressed_or_hovered(event: On<Add<(Pressed, Hovered)>>, mut button: Query<&mut Button>) {
+    let Ok(mut button) = button.get_mut(event.entity) else {
+        return;
+    };
+    button.set_changed();
+}
+
+/// Observer to notify the button to update its color when Pressed or Hovered is removed.
+///
+/// We defer the button color update until later, so that we don't see an "incomplete state" (e.g.,
+/// hovered added while pressed needs to be removed).
+fn on_remove_pressed_or_hovered(
+    event: On<Remove<(Pressed, Hovered)>>,
+    mut button: Query<&mut Button>,
+) {
+    let Ok(mut button) = button.get_mut(event.entity) else {
+        return;
+    };
+    button.set_changed();
+}
+
 fn update_buttons_background(
-    mut buttons: Query<(&Interaction, &mut BackgroundColor), Changed<Interaction>>,
+    mut buttons: Query<(Has<Pressed>, Has<Hovered>, &mut BackgroundColor), Changed<Button>>,
 ) {
     const HOVER_COLOR: Color = Color::srgb(0.85, 0.85, 0.85);
     const PRESS_COLOR: Color = Color::srgb(0.95, 0.95, 0.95);
 
-    for (interaction, mut background) in &mut buttons {
-        match interaction {
-            Interaction::Pressed => *background = PRESS_COLOR.into(),
-            Interaction::Hovered => *background = HOVER_COLOR.into(),
-            Interaction::None => *background = BACKGROUND_COLOR.into(),
+    for (pressed, hovered, mut background) in &mut buttons {
+        match (pressed, hovered) {
+            (true, _) => *background = PRESS_COLOR.into(),
+            (false, true) => *background = HOVER_COLOR.into(),
+            (false, false) => *background = BACKGROUND_COLOR.into(),
         };
     }
 }
