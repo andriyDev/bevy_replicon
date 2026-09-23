@@ -28,8 +28,6 @@ fn main() {
         .add_observer(trigger_remote_toggle)
         .add_observer(apply_remote_toggle)
         .add_systems(Startup, setup)
-        .add_observer(on_add_pressed_or_hovered)
-        .add_observer(on_remove_pressed_or_hovered)
         .add_systems(Update, (update_button_background, update_toggle_text))
         .run();
 }
@@ -113,33 +111,8 @@ fn apply_remote_toggle(
     }
 }
 
-/// Observer to notify the button to update its color when Pressed or Hovered is added.
-///
-/// We defer the button color update until later, so that we don't see an "incomplete state" (e.g.,
-/// hovered added while pressed needs to be removed).
-fn on_add_pressed_or_hovered(event: On<Add<(Pressed, Hovered)>>, mut button: Query<&mut Button>) {
-    let Ok(mut button) = button.get_mut(event.entity) else {
-        return;
-    };
-    button.set_changed();
-}
-
-/// Observer to notify the button to update its color when Pressed or Hovered is removed.
-///
-/// We defer the button color update until later, so that we don't see an "incomplete state" (e.g.,
-/// hovered added while pressed needs to be removed).
-fn on_remove_pressed_or_hovered(
-    event: On<Remove<(Pressed, Hovered)>>,
-    mut button: Query<&mut Button>,
-) {
-    let Ok(mut button) = button.get_mut(event.entity) else {
-        return;
-    };
-    button.set_changed();
-}
-
 fn update_button_background(
-    mut buttons: Query<(Has<Pressed>, Has<Hovered>, &mut BackgroundColor), Changed<Button>>,
+    mut buttons: Query<(Has<Pressed>, Has<Hovered>, &mut BackgroundColor), With<Button>>,
 ) {
     for (pressed, hovered, mut background_color) in &mut buttons {
         *background_color = match (pressed, hovered) {
